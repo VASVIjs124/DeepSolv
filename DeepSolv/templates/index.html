@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopify Store Insights Fetcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .examples {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .examples h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .example-link {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+        
+        .example-link:hover {
+            text-decoration: underline;
+        }
+        
+        .result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #667eea;
+            display: none;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Shopify Store Insights Fetcher</h1>
+        <p class="subtitle">Analyze any Shopify store and get comprehensive brand insights</p>
+        
+        <div class="examples">
+            <h3>Popular Shopify Stores:</h3>
+            <a href="#" class="example-link" onclick="fillExample('https://allbirds.com')">Allbirds</a>
+            <a href="#" class="example-link" onclick="fillExample('https://warbyparker.com')">Warby Parker</a>
+            <a href="#" class="example-link" onclick="fillExample('https://gymshark.com')">Gymshark</a>
+            <a href="#" class="example-link" onclick="fillExample('https://beardbrand.com')">Beardbrand</a>
+        </div>
+        
+        <form id="analysisForm">
+            <div class="form-group">
+                <label for="websiteUrl">🔗 Website URL:</label>
+                <input 
+                    type="url" 
+                    id="websiteUrl" 
+                    name="websiteUrl" 
+                    placeholder="https://example.com"
+                    required
+                >
+            </div>
+            
+            <button type="submit" class="btn" id="analyzeBtn">
+                🚀 Analyze Store
+            </button>
+        </form>
+        
+        <div class="loading" id="loading">
+            ⏳ Analyzing store... This may take a few moments...
+        </div>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="links">
+            <a href="/docs" target="_blank">📚 API Documentation</a>
+            <a href="/api/v1/health" target="_blank">❤️ Health Check</a>
+            <a href="/api/v1/brands" target="_blank">👥 View All Brands</a>
+        </div>
+    </div>
+
+    <script>
+        function fillExample(url) {
+            document.getElementById('websiteUrl').value = url;
+        }
+        
+        document.getElementById('analysisForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const url = document.getElementById('websiteUrl').value;
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            // Reset UI
+            result.style.display = 'none';
+            loading.style.display = 'block';
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '⏳ Analyzing...';
+            
+            try {
+                const response = await fetch('/api/v1/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        website_url: url,
+                        analysis_depth: 'comprehensive',
+                        force_refresh: false
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Success
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <h3>✅ Analysis Complete!</h3>
+                        <p><strong>Brand:</strong> ${data.brand_data?.brand_name || 'Unknown'}</p>
+                        <p><strong>Products Found:</strong> ${data.brand_data?.products?.length || 0}</p>
+                        <p><strong>Pages Analyzed:</strong> ${data.brand_data?.pages_analyzed || 0}</p>
+                        <p><strong>Analysis Time:</strong> ${new Date(data.analysis_time).toLocaleString()}</p>
+                        ${data.cached ? '<p><em>🔄 This is cached data. Use force refresh for latest data.</em></p>' : ''}
+                        <p><a href="/api/v1/brands" target="_blank">View all analyzed brands →</a></p>
+                    `;
+                } else {
+                    // Error
+                    result.className = 'result error';
+                    result.innerHTML = `
+                        <h3>❌ Analysis Failed</h3>
+                        <p>${data.detail || data.message || 'Unknown error occurred'}</p>
+                    `;
+                }
+                
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>❌ Connection Error</h3>
+                    <p>Could not connect to the analysis service. Please make sure the server is running.</p>
+                `;
+            }
+            
+            // Reset UI
+            loading.style.display = 'none';
+            result.style.display = 'block';
+            analyzeBtn.disabled = false;
+            analyzeBtn.textContent = '🚀 Analyze Store';
+        });
+    </script>
+</body>
+</html>
