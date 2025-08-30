@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopify Store Insights Fetcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 90%;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .examples {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .examples h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .example-link {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+        
+        .example-link:hover {
+            text-decoration: underline;
+        }
+        
+        .result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #667eea;
+            display: none;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Ensure content sections don't break layout */
+        .analysis-section {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .analysis-section p {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+        
+        /* Consistent container alignment styles */
+        .content-section {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: #ffffff;
+            position: relative;
+        }
+        
+        .section-header {
+            background: #f8f9fa;
+            margin: -15px -15px 15px -15px;
+            padding: 12px 15px;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .section-content {
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        
+        /* Specific section color themes */
+        .brand-section { border-left: 4px solid #667eea; }
+        .products-section { border-left: 4px solid #28a745; }
+        .hero-section { border-left: 4px solid #ffc107; }
+        .policies-section { border-left: 4px solid #6f42c1; }
+        .faqs-section { border-left: 4px solid #20c997; }
+        .social-section { border-left: 4px solid #fd7e14; }
+        .contact-section { border-left: 4px solid #dc3545; }
+        .links-section { border-left: 4px solid #6c757d; }
+        .competitors-section { border-left: 4px solid #e83e8c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Shopify Store Insights Fetcher</h1>
+        <p class="subtitle">Analyze any Shopify store and get comprehensive brand insights</p>
+        
+        <div class="examples">
+            <h3>Assignment Reference Shopify Stores:</h3>
+            <a href="#" class="example-link" onclick="fillExample('https://memy.co.in')">Memy.co.in</a>
+            <a href="#" class="example-link" onclick="fillExample('https://hairoriginals.com')">Hair Originals</a>
+            <a href="#" class="example-link" onclick="fillExample('https://colourpop.com')">ColourPop</a>
+            <a href="#" class="example-link" onclick="fillExample('https://allbirds.com')">Allbirds</a>
+        </div>
+        
+        <form id="analysisForm">
+            <div class="form-group">
+                <label for="websiteUrl">🔗 Website URL:</label>
+                <input 
+                    type="url" 
+                    id="websiteUrl" 
+                    name="websiteUrl" 
+                    placeholder="https://example.com"
+                    required
+                >
+            </div>
+            
+            <button type="submit" class="btn" id="analyzeBtn">
+                🚀 Analyze Store
+            </button>
+        </form>
+        
+        <div class="loading" id="loading">
+            ⏳ Analyzing store... This may take a few moments...
+        </div>
+        
+        <div class="result" id="result"></div>
+        
+        <div class="links">
+            <a href="/docs" target="_blank">📚 API Documentation</a>
+            <a href="/api/v1/health" target="_blank">❤️ Health Check</a>
+            <a href="/api/v1/brands" target="_blank">👥 View All Brands</a>
+        </div>
+    </div>
+
+    <script>
+        function fillExample(url) {
+            document.getElementById('websiteUrl').value = url;
+        }
+        
+        document.getElementById('analysisForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const url = document.getElementById('websiteUrl').value;
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            // Reset UI
+            result.style.display = 'none';
+            loading.style.display = 'block';
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = '⏳ Analyzing...';
+            
+            try {
+                const response = await fetch('/api/v1/analyze-store', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        website_url: url
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Success - Display comprehensive assignment-required data
+                    result.className = 'result success';
+                    
+                    // Helper function to safely display arrays with expandable functionality
+                    const displayArray = (arr, key = null, sectionId = null) => {
+                        if (!arr || !Array.isArray(arr) || arr.length === 0) return '<em>None found</em>';
+                        
+                        const displayItems = (items, showAll = false) => {
+                            const itemsToShow = showAll ? items : items.slice(0, 3);
+                            const itemsHtml = itemsToShow.map(item => {
+                                if (key && item[key]) return `• ${item[key]}`;
+                                if (typeof item === 'string') return `• ${item}`;
+                                if (typeof item === 'object') {
+                                    // For product objects, show title and price if available
+                                    const title = item.title || item.name || 'Unnamed item';
+                                    const price = item.price ? ` - $${item.price}` : '';
+                                    return `• ${title}${price}`;
+                                }
+                                return `• ${JSON.stringify(item).substring(0, 50)}...`;
+                            }).join('<br>');
+                            
+                            if (!showAll && arr.length > 3) {
+                                const remainingCount = arr.length - 3;
+                                const expandId = sectionId ? `${sectionId}_expand` : `expand_${Math.random().toString(36).substr(2, 9)}`;
+                                return itemsHtml + `<br><a href="#" style="color: #667eea; text-decoration: none;" onclick="expandSection('${expandId}', this); return false;">... and ${remainingCount} more (click to expand)</a>`;
+                            }
+                            return itemsHtml;
+                        };
+                        
+                        return `<div id="${sectionId || 'section_' + Math.random().toString(36).substr(2, 9)}">${displayItems(arr, false)}</div>`;
+                    };
+                    
+                    // Helper function to display object
+                    const displayObject = (obj) => {
+                        if (!obj || typeof obj !== 'object') return '<em>None found</em>';
+                        return Object.entries(obj).map(([key, value]) => {
+                            if (value && typeof value === 'string' && value.length > 100) {
+                                return `<strong>${key}:</strong> ${value.substring(0, 100)}... <a href="#" onclick="showFullText('${key}', '${value.replace(/'/g, "\\'")}'); return false;" style="color: #667eea;">(show full)</a>`;
+                            }
+                            return `<strong>${key}:</strong> ${value || 'N/A'}`;
+                        }).slice(0, 5).join('<br>');
+                    };
+                    
+                    // Helper function to display FAQs with expandable answers
+                    const displayFAQs = (faqs) => {
+                        if (!faqs || !Array.isArray(faqs) || faqs.length === 0) return '<em>No FAQs found</em>';
+                        
+                        return faqs.map((faq, index) => {
+                            const faqId = `faq_${index}`;
+                            const question = faq.question || 'Untitled Question';
+                            const answer = faq.answer || 'No answer provided';
+                            
+                            return `
+                                <div style="margin: 8px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9;">
+                                    <div style="font-weight: bold; cursor: pointer; color: #333; display: flex; justify-content: space-between; align-items: center;" 
+                                         onclick="toggleFAQ('${faqId}')">
+                                        <span>• ${question}</span>
+                                        <span id="${faqId}_icon" style="transition: transform 0.2s;">▼</span>
+                                    </div>
+                                    <div id="${faqId}_answer" style="display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; color: #666; font-weight: normal;">
+                                        ${answer}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    };
+                    
+                    // Helper function to display social media handles properly
+                    const displaySocialMedia = (socialHandles) => {
+                        if (!socialHandles || typeof socialHandles !== 'object') return '<em>No social media handles found</em>';
+                        
+                        // Handle both array and object formats
+                        let socialData = socialHandles;
+                        if (Array.isArray(socialHandles)) {
+                            // If it's an array, convert to display format
+                            return socialHandles.map(handle => {
+                                if (typeof handle === 'string') return `• ${handle}`;
+                                if (handle.platform && handle.url) {
+                                    return `• <strong>${handle.platform}:</strong> <a href="${handle.url}" target="_blank" style="color: #667eea;">${handle.url}</a>`;
+                                }
+                                if (handle.platform && handle.handle) {
+                                    return `• <strong>${handle.platform}:</strong> ${handle.handle}`;
+                                }
+                                return `• ${JSON.stringify(handle)}`;
+                            }).join('<br>');
+                        } else {
+                            // If it's an object, display key-value pairs
+                            const entries = Object.entries(socialData);
+                            if (entries.length === 0) return '<em>No social media handles found</em>';
+                            
+                            return entries.map(([platform, value]) => {
+                                if (typeof value === 'string') {
+                                    // Check if it's a URL
+                                    if (value.startsWith('http://') || value.startsWith('https://')) {
+                                        return `• <strong>${platform}:</strong> <a href="${value}" target="_blank" style="color: #667eea;">${value}</a>`;
+                                    } else {
+                                        return `• <strong>${platform}:</strong> ${value}`;
+                                    }
+                                } else if (value && typeof value === 'object') {
+                                    // If value is an object, try to extract useful info
+                                    const url = value.url || value.link || '';
+                                    const handle = value.handle || value.username || '';
+                                    if (url) {
+                                        return `• <strong>${platform}:</strong> <a href="${url}" target="_blank" style="color: #667eea;">${handle || url}</a>`;
+                                    } else if (handle) {
+                                        return `• <strong>${platform}:</strong> ${handle}`;
+                                    }
+                                }
+                                return `• <strong>${platform}:</strong> ${value || 'N/A'}`;
+                            }).join('<br>');
+                        }
+                    };
+                    
+                    // Helper function to display hero products with rich formatting
+                    const displayHeroProducts = (heroProducts) => {
+                        if (!heroProducts || !Array.isArray(heroProducts)) {
+                            return '<div style="padding: 12px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; color: #856404;"><em>⚠️ No hero products found - This may indicate the website uses custom structure</em></div>';
+                        }
+                        
+                        if (heroProducts.length === 0) {
+                            return '<div style="padding: 12px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; color: #856404;"><em>⚠️ No hero products detected - Try analyzing a Shopify store or e-commerce site</em></div>';
+                        }
+                        
+                        const displayItems = (items, showAll = false) => {
+                            const itemsToShow = showAll ? items : items.slice(0, 4); // Show up to 4 initially
+                            
+                            return itemsToShow.map((product, index) => {
+                                const title = product.title || 'Untitled Product';
+                                const price = product.price ? `$${product.price}` : '';
+                                const description = product.description ? 
+                                    (product.description.length > 120 ? product.description.substring(0, 120) + '...' : product.description) 
+                                    : 'No description available';
+                                const imageUrl = product.image_url || '';
+                                const productUrl = product.product_url || '';
+                                
+                                // Add priority indicator for top products
+                                const priorityBadge = index < 2 ? '<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin-left: 8px;">Featured</span>' : '';
+                                
+                                let productHtml = `
+                                    <div style="margin: 10px 0; padding: 16px; border: 1px solid #ddd; border-radius: 12px; background: #fafafa; display: flex; align-items: flex-start; gap: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                        ${imageUrl ? `
+                                            <div style="flex-shrink: 0;">
+                                                <img src="${imageUrl}" alt="${title}" 
+                                                     style="width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;" 
+                                                     onerror="this.parentElement.style.display='none'">
+                                            </div>
+                                        ` : ''}
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div style="font-weight: bold; color: #333; margin-bottom: 6px; font-size: 1.1em;">
+                                                ${productUrl ? `<a href="${productUrl}" target="_blank" style="color: #667eea; text-decoration: none;">${title}</a>` : title}
+                                                ${price ? `<span style="color: #28a745; margin-left: 12px; font-weight: 600;">${price}</span>` : ''}
+                                                ${priorityBadge}
+                                            </div>
+                                            <div style="color: #666; font-size: 0.95em; line-height: 1.4; margin-bottom: 8px;">${description}</div>
+                                            ${productUrl ? `<a href="${productUrl}" target="_blank" style="color: #667eea; text-decoration: none; font-size: 0.9em; font-weight: 500;">View Product →</a>` : ''}
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                return productHtml;
+                            }).join('');
+                        };
+                        
+                        const initialDisplay = displayItems(heroProducts, false);
+                        const productCount = heroProducts.length;
+                        
+                        // Add summary header
+                        let headerHtml = `<div style="background: #e8f4fd; border: 1px solid #bee5eb; padding: 10px; border-radius: 8px; margin-bottom: 12px; color: #0c5460;">
+                            <strong>🏆 Hero Products Found: ${productCount}</strong>
+                            ${productCount >= 2 ? ' <span style="color: #28a745;">✓ Minimum target met</span>' : ' <span style="color: #dc3545;">⚠️ Below target (2+ recommended)</span>'}
+                        </div>`;
+                        
+                        if (heroProducts.length > 4) {
+                            const remainingCount = heroProducts.length - 4;
+                            return `
+                                ${headerHtml}
+                                <div id="hero_products_container">
+                                    ${initialDisplay}
+                                    <div style="text-align: center; margin-top: 12px;">
+                                        <a href="#" style="color: #667eea; text-decoration: none; display: inline-block; padding: 8px 16px; border: 1px solid #667eea; border-radius: 6px; background: #f8f9ff;" 
+                                           onclick="expandHeroProducts(this); return false;">
+                                           Show ${remainingCount} More Hero Products
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        return headerHtml + initialDisplay;
+                    };
+                    
+                    // Helper function to display contact information with proper formatting (one per category)
+                    const displayContactInfo = (contactInfo) => {
+                        if (!contactInfo || typeof contactInfo !== 'object') {
+                            return '<em>No contact information found</em>';
+                        }
+                        
+                        let contactHtml = `
+                            <div style="background: #e8f4fd; border: 1px solid #bee5eb; padding: 10px; border-radius: 8px; margin-bottom: 12px; color: #0c5460;">
+                                <strong>📞 Contact Information</strong>
+                            </div>
+                        `;
+                        
+                        let hasContact = false;
+                        
+                        // Display single best email
+                        if (contactInfo.emails && Array.isArray(contactInfo.emails) && contactInfo.emails.length > 0) {
+                            hasContact = true;
+                            const email = contactInfo.emails[0]; // Single email
+                            contactHtml += `
+                                <div style="margin: 8px 0; display: flex; align-items: center; background: #f8f9ff; border: 1px solid #e1e5f7; border-radius: 8px; padding: 12px;">
+                                    <div style="font-size: 1.2em; margin-right: 12px;">📧</div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; color: #333; margin-bottom: 2px;">Email</div>
+                                        <a href="mailto:${email}" style="color: #667eea; text-decoration: none; font-size: 0.9em;"
+                                           onmouseover="this.style.textDecoration='underline'" 
+                                           onmouseout="this.style.textDecoration='none'">
+                                           ${email}
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        // Display single best phone number
+                        if (contactInfo.phone_numbers && Array.isArray(contactInfo.phone_numbers) && contactInfo.phone_numbers.length > 0) {
+                            hasContact = true;
+                            const phone = contactInfo.phone_numbers[0]; // Single phone
+                            contactHtml += `
+                                <div style="margin: 8px 0; display: flex; align-items: center; background: #f8f9ff; border: 1px solid #e1e5f7; border-radius: 8px; padding: 12px;">
+                                    <div style="font-size: 1.2em; margin-right: 12px;">📱</div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; color: #333; margin-bottom: 2px;">Phone</div>
+                                        <a href="tel:${phone}" style="color: #667eea; text-decoration: none; font-size: 0.9em;"
+                                           onmouseover="this.style.textDecoration='underline'" 
+                                           onmouseout="this.style.textDecoration='none'">
+                                           ${phone}
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        // Display single best address
+                        if (contactInfo.addresses && Array.isArray(contactInfo.addresses) && contactInfo.addresses.length > 0) {
+                            hasContact = true;
+                            const address = contactInfo.addresses[0]; // Single address
+                            contactHtml += `
+                                <div style="margin: 8px 0; display: flex; align-items: flex-start; background: #f8f9ff; border: 1px solid #e1e5f7; border-radius: 8px; padding: 12px;">
+                                    <div style="font-size: 1.2em; margin-right: 12px; margin-top: 2px;">📍</div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; color: #333; margin-bottom: 2px;">Address</div>
+                                        <div style="color: #555; font-size: 0.9em; line-height: 1.4;">${address}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        if (!hasContact) {
+                            return `
+                                <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 12px; border-radius: 8px; color: #856404;">
+                                    <em>⚠️ No contact information found - This may indicate the website uses custom contact forms or chat systems</em>
+                                </div>
+                            `;
+                        }
+                        
+                        return contactHtml;
+                    };
+                    
+                    // Helper function to display important links with categories (one per category)
+                    const displayImportantLinks = (importantLinks) => {
+                        if (!importantLinks || !Array.isArray(importantLinks) || importantLinks.length === 0) {
+                            return '<em>No important links found</em>';
+                        }
+                        
+                        // Category icons and display names mapping
+                        const categoryConfig = {
+                            'contact': { icon: '📞', name: 'Contact' },
+                            'about': { icon: '👥', name: 'About' },
+                            'blog': { icon: '📝', name: 'Blog' },
+                            'careers': { icon: '💼', name: 'Careers' },
+                            'press': { icon: '📰', name: 'Press' },
+                            'help': { icon: '📦', name: 'Help' },
+                            'service': { icon: '🚚', name: 'Service' },
+                            'faq': { icon: '❓', name: 'FAQ' },
+                            'store_locator': { icon: '🏪', name: 'Locations' },
+                            'wholesale': { icon: '🏢', name: 'Wholesale' },
+                            'affiliate': { icon: '🤝', name: 'Partners' },
+                            'sustainability': { icon: '🌱', name: 'Sustainability' },
+                            'reviews': { icon: '⭐', name: 'Reviews' },
+                            'other': { icon: '🔗', name: 'Other' }
+                        };
+                        
+                        let linksHtml = `
+                            <div style="background: #e8f4fd; border: 1px solid #bee5eb; padding: 10px; border-radius: 8px; margin-bottom: 12px; color: #0c5460;">
+                                <strong>🔗 Important Links Found: ${importantLinks.length}</strong>
+                            </div>
+                        `;
+                        
+                        // Display each link as a prominent button/card
+                        importantLinks.forEach(link => {
+                            const category = link.type || 'other';
+                            const config = categoryConfig[category] || categoryConfig['other'];
+                            
+                            linksHtml += `
+                                <div style="margin: 8px 0; display: flex; align-items: center; background: #f8f9ff; border: 1px solid #e1e5f7; border-radius: 8px; padding: 12px; transition: all 0.2s ease;">
+                                    <div style="font-size: 1.2em; margin-right: 12px;">${config.icon}</div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; color: #333; margin-bottom: 2px;">${config.name}</div>
+                                        <a href="${link.url}" target="_blank" 
+                                           style="color: #667eea; text-decoration: none; font-size: 0.9em; display: inline-flex; align-items: center;"
+                                           onmouseover="this.style.textDecoration='underline'" 
+                                           onmouseout="this.style.textDecoration='none'">
+                                           ${link.title} <span style="margin-left: 4px;">→</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        return linksHtml;
+                    };
+                    
+                    // Helper function to display competitors with enhanced formatting
+                    const displayCompetitors = (competitors) => {
+                        if (!competitors || !Array.isArray(competitors) || competitors.length === 0) {
+                            return '<div style="text-align: center; padding: 20px; color: #666;"><em>🔍 No competitors found for this website<br>Try analyzing a more established e-commerce brand</em></div>';
+                        }
+                        
+                        // Add summary header
+                        let headerHtml = `<div style="background: #e8f4fd; border: 1px solid #bee5eb; padding: 10px; border-radius: 8px; margin-bottom: 12px; color: #0c5460;">
+                            <strong>🏆 Competitors Found: ${competitors.length}</strong>
+                            ${competitors.length >= 2 ? ' <span style="color: #28a745;">✓ Minimum target met</span>' : ' <span style="color: #dc3545;">⚠️ Below target (2+ recommended)</span>'}
+                        </div>`;
+                        
+                        const displayItems = (items, showAll = false) => {
+                            const itemsToShow = showAll ? items : items.slice(0, 5);
+                            
+                            return itemsToShow.map((competitor, index) => {
+                                // Handle both string URLs and detailed competitor objects
+                                let url, domain, displayName, title, description, category, strength, marketPosition, source;
+                                
+                                if (typeof competitor === 'string') {
+                                    // Legacy format - just URL
+                                    url = competitor;
+                                    domain = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+                                    displayName = domain.split('.')[0];
+                                    title = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+                                    description = "Competitor website";
+                                    category = "E-commerce";
+                                    strength = "Unknown";
+                                    marketPosition = "Competitor";
+                                    source = "Legacy";
+                                } else {
+                                    // Enhanced format - detailed object
+                                    url = competitor.url || '';
+                                    domain = competitor.domain || '';
+                                    title = competitor.title || competitor.domain || 'Unknown Competitor';
+                                    description = competitor.description || 'Competitor in the same market segment';
+                                    category = competitor.category || 'E-commerce';
+                                    strength = competitor.strength || 'Moderate';
+                                    marketPosition = competitor.market_position || 'Competitor';
+                                    source = competitor.source || 'Database';
+                                }
+                                
+                                // Source badges
+                                const sourceBadges = {
+                                    'Database': { color: '#28a745', icon: '📊' },
+                                    'Web Search': { color: '#17a2b8', icon: '🔍' },
+                                    'Industry Analysis': { color: '#6f42c1', icon: '📈' },
+                                    'AI Generated': { color: '#fd7e14', icon: '🤖' }
+                                };
+                                
+                                const sourceBadge = sourceBadges[source] || { color: '#6c757d', icon: '📍' };
+                                
+                                // Strength indicators
+                                const strengthColors = {
+                                    'Strong': '#28a745',
+                                    'Moderate': '#ffc107',
+                                    'Emerging': '#17a2b8',
+                                    'Unknown': '#6c757d'
+                                };
+                                
+                                return `
+                                    <div style="margin: 10px 0; padding: 16px; border: 1px solid #ddd; border-radius: 10px; background: #f8fffe; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px;">
+                                            <div style="flex: 1;">
+                                                <div style="font-weight: bold; color: #333; margin-bottom: 4px; font-size: 1.1em;">
+                                                    ${title}
+                                                    <span style="background: ${sourceBadge.color}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; margin-left: 8px;">
+                                                        ${sourceBadge.icon} ${source}
+                                                    </span>
+                                                </div>
+                                                <div style="color: #666; font-size: 0.85em; margin-bottom: 2px;">${domain}</div>
+                                                <div style="color: #555; font-size: 0.9em; line-height: 1.4; margin-bottom: 8px;">${description}</div>
+                                                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                                    <span style="background: #f1f3f4; color: #333; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">
+                                                        📊 ${category}
+                                                    </span>
+                                                    <span style="background: ${strengthColors[strength]}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">
+                                                        💪 ${strength}
+                                                    </span>
+                                                    <span style="background: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">
+                                                        🎯 ${marketPosition}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div style="display: flex; flex-direction: column; gap: 6px; margin-left: 16px;">
+                                                <a href="${url}" target="_blank" 
+                                                   style="background: #667eea; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85em; transition: background 0.2s; text-align: center;"
+                                                   onmouseover="this.style.background='#5a67d8'"
+                                                   onmouseout="this.style.background='#667eea'">
+                                                   Visit Site
+                                                </a>
+                                                <button onclick="analyzeCompetitor('${url}')" 
+                                                        style="background: #48bb78; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; transition: background 0.2s;"
+                                                        onmouseover="this.style.background='#38a169'"
+                                                        onmouseout="this.style.background='#48bb78'">
+                                                    Analyze
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('');
+                        };
+                        
+                        const initialDisplay = displayItems(competitors, false);
+                        
+                        if (competitors.length > 5) {
+                            const remainingCount = competitors.length - 5;
+                            return `
+                                ${headerHtml}
+                                <div id="competitors_container">
+                                    ${initialDisplay}
+                                    <div style="text-align: center; margin-top: 12px;">
+                                        <a href="#" style="color: #667eea; text-decoration: none; display: inline-block; padding: 8px 16px; border: 1px solid #667eea; border-radius: 6px; background: #f8f9ff;" 
+                                           onclick="expandCompetitors(this); return false;">
+                                           ▼ Show ${remainingCount} More Competitors
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        return headerHtml + initialDisplay;
+                    };
+                    
+                    // Store full data for expansion
+                    window.analysisData = data;
+                    
+                    result.innerHTML = `
+                        <div style="max-height: 600px; overflow-y: auto; padding: 10px; word-wrap: break-word; overflow-wrap: break-word;">
+                            <h3>✅ Shopify Store Analysis Complete!</h3>
+                            
+                            <div class="content-section brand-section">
+                                <div class="section-header">🏢 Brand Information</div>
+                                <div class="section-content">
+                                    <p><strong>Brand Name:</strong> ${data.brand_name || 'Unknown'}</p>
+                                    <p><strong>Website:</strong> <a href="${data.website_url}" target="_blank">${data.website_url}</a></p>
+                                    <p><strong>Description:</strong> ${data.brand_description || 'Not available'}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="content-section products-section">
+                                <div class="section-header">🛍️ Product Catalog (${data.product_catalog?.length || 0} products)</div>
+                                <div class="section-content" id="product_catalog_section">
+                                    ${displayArray(data.product_catalog, 'title', 'products')}
+                                </div>
+                            </div>
+                            
+                            <div class="content-section hero-section">
+                                <div class="section-header">⭐ Hero Products (${data.hero_products?.length || 0} featured)</div>
+                                <div class="section-content" id="hero_products_section">
+                                    ${displayHeroProducts(data.hero_products)}
+                                </div>
+                            </div>
+                            
+                            <div class="content-section policies-section">
+                                <div class="section-header">📋 Policies</div>
+                                <div class="section-content">
+                                    <p><strong>Privacy Policy:</strong> ${data.privacy_policy ? 'Available ✅' : 'Not found ❌'}</p>
+                                    <p><strong>Return Policy:</strong> ${data.return_refund_policies?.return_policy ? 'Available ✅' : 'Not found ❌'}</p>
+                                    <p><strong>Refund Policy:</strong> ${data.return_refund_policies?.refund_policy ? 'Available ✅' : 'Not found ❌'}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="content-section faqs-section">
+                                <div class="section-header">❓ FAQs (${data.faqs?.length || 0} found)</div>
+                                <div class="section-content" id="faqs_section">
+                                    ${displayFAQs(data.faqs)}
+                                </div>
+                            </div>
+                            
+                            <div class="content-section social-section">
+                                <div class="section-header">📱 Social Media Handles</div>
+                                <div class="section-content">
+                                    ${displaySocialMedia(data.social_handles)}
+                                </div>
+                            </div>
+                            
+                            <div class="content-section contact-section">
+                                <div class="section-header">📞 Contact Information</div>
+                                <div class="section-content">
+                                    ${displayContactInfo(data.contact_details)}
+                                </div>
+                            </div>
+                            
+                            <div class="content-section links-section">
+                                <div class="section-header">🔗 Important Links</div>
+                                <div class="section-content">
+                                    ${displayImportantLinks(data.important_links)}
+                                </div>
+                            </div>
+                            
+                            <div class="content-section competitors-section">
+                                <div class="section-header">🏆 Competitors (${data.competitors?.length || 0} found)</div>
+                                <div class="section-content" id="competitors_section">
+                                    ${displayCompetitors(data.competitors)}
+                                </div>
+                            </div>
+                            
+                            <div style="margin: 15px 0; padding: 10px; background: #f5f5f5; border-radius: 5px; text-align: center;">
+                                <p><strong>Analysis Time:</strong> ${data.analysis_timestamp ? new Date(data.analysis_timestamp).toLocaleString() : new Date().toLocaleString()}</p>
+                                ${data.cached ? '<p><em>🔄 This is cached data</em></p>' : '<p><em>✨ Fresh analysis</em></p>'}
+                                <p style="margin-top: 10px;">
+                                    <a href="/docs" target="_blank" style="margin: 0 10px;">📚 API Docs</a>
+                                    <a href="/api/v1/brands" target="_blank" style="margin: 0 10px;">👥 All Brands</a>
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Error
+                    result.className = 'result error';
+                    result.innerHTML = `
+                        <h3>❌ Analysis Failed</h3>
+                        <p>${data.detail || data.message || 'Unknown error occurred'}</p>
+                    `;
+                }
+                
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>❌ Connection Error</h3>
+                    <p>Could not connect to the analysis service. Please make sure the server is running.</p>
+                `;
+            }
+            
+            // Reset UI
+            loading.style.display = 'none';
+            result.style.display = 'block';
+            analyzeBtn.disabled = false;
+            analyzeBtn.textContent = '🚀 Analyze Store';
+        });
+        
+        // Function to expand sections
+        function expandSection(sectionId, linkElement) {
+            const data = window.analysisData;
+            if (!data) return;
+            
+            const sectionMap = {
+                'products_expand': data.product_catalog,
+                'hero_products_expand': data.hero_products,
+                'faqs_expand': data.faqs,
+                'competitors_expand': data.competitors
+            };
+            
+            const sectionDataMap = {
+                'products_expand': { key: 'title', targetId: 'product_catalog_section' },
+                'hero_products_expand': { key: 'title', targetId: 'hero_products_section' },
+                'faqs_expand': { key: 'question', targetId: 'faqs_section' },
+                'competitors_expand': { key: null, targetId: 'competitors_section' }
+            };
+            
+            const sectionData = sectionMap[sectionId];
+            const config = sectionDataMap[sectionId];
+            
+            if (sectionData && config) {
+                const targetElement = document.getElementById(config.targetId);
+                if (targetElement) {
+                    const allItems = sectionData.map(item => {
+                        if (config.key && item[config.key]) return `• ${item[config.key]}`;
+                        if (typeof item === 'string') return `• ${item}`;
+                        if (typeof item === 'object') {
+                            const title = item.title || item.name || 'Unnamed item';
+                            const price = item.price ? ` - $${item.price}` : '';
+                            return `• ${title}${price}`;
+                        }
+                        return `• ${JSON.stringify(item).substring(0, 50)}...`;
+                    }).join('<br>');
+                    
+                    targetElement.innerHTML = allItems + '<br><em style="color: #666;">All items shown</em>';
+                }
+            }
+        }
+        
+        // Function to show full text in a modal-like popup
+        function showFullText(title, content) {
+            const popup = document.createElement('div');
+            popup.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            `;
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white;
+                padding: 20px;
+                border-radius: 10px;
+                max-width: 80%;
+                max-height: 80%;
+                overflow-y: auto;
+                position: relative;
+            `;
+            
+            modal.innerHTML = `
+                <h3>${title}</h3>
+                <p style="line-height: 1.6; margin: 10px 0;">${content}</p>
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        style="position: absolute; top: 10px; right: 10px; background: #f44336; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer;">×</button>
+            `;
+            
+            popup.appendChild(modal);
+            document.body.appendChild(popup);
+            
+            popup.onclick = function(e) {
+                if (e.target === popup) {
+                    popup.remove();
+                }
+            };
+        }
+        
+        // Function to toggle FAQ answers
+        function toggleFAQ(faqId) {
+            const answerDiv = document.getElementById(faqId + '_answer');
+            const iconSpan = document.getElementById(faqId + '_icon');
+            
+            if (answerDiv.style.display === 'none' || answerDiv.style.display === '') {
+                answerDiv.style.display = 'block';
+                iconSpan.style.transform = 'rotate(180deg)';
+                iconSpan.textContent = '▲';
+            } else {
+                answerDiv.style.display = 'none';
+                iconSpan.style.transform = 'rotate(0deg)';
+                iconSpan.textContent = '▼';
+            }
+        }
+        
+        // Function to expand hero products
+        function expandHeroProducts(linkElement) {
+            const data = window.analysisData;
+            if (!data || !data.hero_products) return;
+            
+            const container = document.getElementById('hero_products_container');
+            if (!container) return;
+            
+            // Display all hero products with rich formatting
+            const allProductsHtml = data.hero_products.map(product => {
+                const title = product.title || 'Untitled Product';
+                const price = product.price ? `$${product.price}` : '';
+                const description = product.description ? product.description.substring(0, 150) + (product.description.length > 150 ? '...' : '') : '';
+                const imageUrl = product.image_url || '';
+                const productUrl = product.product_url || '';
+                
+                return `
+                    <div style="margin: 8px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; display: flex; align-items: flex-start; gap: 12px;">
+                        ${imageUrl ? `<img src="${imageUrl}" alt="${title}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px; flex-shrink: 0;" onerror="this.style.display='none'">` : ''}
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: bold; color: #333; margin-bottom: 4px;">
+                                ${productUrl ? `<a href="${productUrl}" target="_blank" style="color: #667eea; text-decoration: none;">${title}</a>` : title}
+                                ${price ? `<span style="color: #28a745; margin-left: 8px;">${price}</span>` : ''}
+                            </div>
+                            ${description ? `<div style="color: #666; font-size: 0.9em; line-height: 1.3;">${description}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = `
+                ${allProductsHtml}
+                <a href="#" style="color: #667eea; text-decoration: none; display: inline-block; margin-top: 8px;" 
+                   onclick="collapseHeroProducts(this); return false;">
+                   ▲ Show less
+                </a>
+            `;
+        }
+        
+        // Function to collapse hero products
+        function collapseHeroProducts(linkElement) {
+            const data = window.analysisData;
+            if (!data || !data.hero_products) return;
+            
+            const container = document.getElementById('hero_products_container');
+            if (!container) return;
+            
+            // Show only first 3 products
+            const limitedProductsHtml = data.hero_products.slice(0, 3).map(product => {
+                const title = product.title || 'Untitled Product';
+                const price = product.price ? `$${product.price}` : '';
+                const description = product.description ? product.description.substring(0, 100) + (product.description.length > 100 ? '...' : '') : '';
+                const imageUrl = product.image_url || '';
+                const productUrl = product.product_url || '';
+                
+                return `
+                    <div style="margin: 8px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa; display: flex; align-items: flex-start; gap: 12px;">
+                        ${imageUrl ? `<img src="${imageUrl}" alt="${title}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px; flex-shrink: 0;" onerror="this.style.display='none'">` : ''}
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: bold; color: #333; margin-bottom: 4px;">
+                                ${productUrl ? `<a href="${productUrl}" target="_blank" style="color: #667eea; text-decoration: none;">${title}</a>` : title}
+                                ${price ? `<span style="color: #28a745; margin-left: 8px;">${price}</span>` : ''}
+                            </div>
+                            ${description ? `<div style="color: #666; font-size: 0.9em; line-height: 1.3;">${description}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            const remainingCount = data.hero_products.length - 3;
+            container.innerHTML = `
+                ${limitedProductsHtml}
+                <a href="#" style="color: #667eea; text-decoration: none; display: inline-block; margin-top: 8px;" 
+                   onclick="expandHeroProducts(this); return false;">
+                   ... and ${remainingCount} more hero products (click to expand)
+                </a>
+            `;
+        }
+        
+        // Function to analyze a competitor
+        function analyzeCompetitor(competitorUrl) {
+            // Set the URL in the input field
+            document.getElementById('websiteUrl').value = competitorUrl;
+            
+            // Trigger the analysis
+            document.getElementById('analysisForm').dispatchEvent(new Event('submit'));
+        }
+        
+        // Function to expand competitors list
+        function expandCompetitors(linkElement) {
+            const data = window.analysisData;
+            if (!data || !data.competitors) return;
+            
+            const container = document.getElementById('competitors_container');
+            if (!container) return;
+            
+            // Display all competitors
+            const allCompetitorsHtml = data.competitors.map((competitor, index) => {
+                const url = typeof competitor === 'string' ? competitor : competitor.url || competitor;
+                const domain = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+                const displayName = domain.split('.')[0];
+                const capitalizedName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+                
+                return `
+                    <div style="margin: 8px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #f8fffe; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; color: #333; margin-bottom: 2px;">
+                                ${capitalizedName}
+                            </div>
+                            <div style="color: #666; font-size: 0.85em;">
+                                ${domain}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <a href="${url}" target="_blank" 
+                               style="background: #667eea; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85em; transition: background 0.2s;"
+                               onmouseover="this.style.background='#5a67d8'"
+                               onmouseout="this.style.background='#667eea'">
+                               Visit Site
+                            </a>
+                            <button onclick="analyzeCompetitor('${url}')" 
+                                    style="background: #48bb78; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; transition: background 0.2s;"
+                                    onmouseover="this.style.background='#38a169'"
+                                    onmouseout="this.style.background='#48bb78'">
+                                Analyze
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = `
+                ${allCompetitorsHtml}
+                <a href="#" style="color: #667eea; text-decoration: none; display: inline-block; margin-top: 8px; padding: 8px; background: #f0f4ff; border-radius: 4px; border: 1px solid #e2e8f0;" 
+                   onclick="collapseCompetitors(this); return false;">
+                   ▲ Show less competitors
+                </a>
+            `;
+        }
+        
+        // Function to collapse competitors list
+        function collapseCompetitors(linkElement) {
+            const data = window.analysisData;
+            if (!data || !data.competitors) return;
+            
+            const container = document.getElementById('competitors_container');
+            if (!container) return;
+            
+            // Show only first 5 competitors
+            const limitedCompetitorsHtml = data.competitors.slice(0, 5).map((competitor, index) => {
+                const url = typeof competitor === 'string' ? competitor : competitor.url || competitor;
+                const domain = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+                const displayName = domain.split('.')[0];
+                const capitalizedName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+                
+                return `
+                    <div style="margin: 8px 0; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #f8fffe; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; color: #333; margin-bottom: 2px;">
+                                ${capitalizedName}
+                            </div>
+                            <div style="color: #666; font-size: 0.85em;">
+                                ${domain}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <a href="${url}" target="_blank" 
+                               style="background: #667eea; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85em; transition: background 0.2s;"
+                               onmouseover="this.style.background='#5a67d8'"
+                               onmouseout="this.style.background='#667eea'">
+                               Visit Site
+                            </a>
+                            <button onclick="analyzeCompetitor('${url}')" 
+                                    style="background: #48bb78; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; transition: background 0.2s;"
+                                    onmouseover="this.style.background='#38a169'"
+                                    onmouseout="this.style.background='#48bb78'">
+                                Analyze
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            const remainingCount = data.competitors.length - 5;
+            container.innerHTML = `
+                ${limitedCompetitorsHtml}
+                <a href="#" style="color: #667eea; text-decoration: none; display: inline-block; margin-top: 8px; padding: 8px; background: #f0f4ff; border-radius: 4px; border: 1px solid #e2e8f0;" 
+                   onclick="expandCompetitors(this); return false;">
+                   ▼ Show ${remainingCount} more competitors
+                </a>
+            `;
+        }
+    </script>
+</body>
+</html>
