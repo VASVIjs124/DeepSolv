@@ -170,7 +170,7 @@ DeepSolv/
 ### ⚡ **One-Line Setup**
 
 ```bash
-git clone https://github.com/your-username/DeepSolv.git && cd DeepSolv && pip install -r requirements.txt && python main.py
+git clone https://github.com/VASVIjs124/DeepSolv.git && cd DeepSolv && pip install -r requirements.txt && python main.py
 ```
 
 ### 🎯 **Instant Demo**
@@ -213,7 +213,7 @@ curl -X POST "http://localhost:8000/api/v1/analyze" \
 
 #### 1. **Clone Repository**
 ```bash
-git clone https://github.com/your-username/DeepSolv.git
+git clone https://github.com/VASVIjs124/DeepSolv.git
 cd DeepSolv
 ```
 
@@ -951,7 +951,7 @@ We welcome contributions from developers, data scientists, and e-commerce enthus
 
 1. **🍴 Fork the Repository**
    ```bash
-   git clone https://github.com/your-username/DeepSolv.git
+   git clone https://github.com/VASVIjs124/DeepSolv.git
    cd DeepSolv
    ```
 
@@ -1059,8 +1059,8 @@ Contributors are recognized in multiple ways:
 
 - **📧 Email**: support@deepsolv.dev
 - **💬 Discord**: [DeepSolv Community](https://discord.gg/deepsolv)
-- **🐛 Issues**: [GitHub Issues](https://github.com/your-username/DeepSolv/issues)
-- **💡 Discussions**: [GitHub Discussions](https://github.com/your-username/DeepSolv/discussions)
+- **🐛 Issues**: [GitHub Issues](https://github.com/VASVIjs124/DeepSolv/issues)
+- **💡 Discussions**: [GitHub Discussions](https://github.com/VASVIjs124/DeepSolv/discussions)
 
 ---
 
@@ -1120,8 +1120,8 @@ DeepSolv uses several open-source libraries. See [THIRD_PARTY_LICENSES.md](THIRD
 Thanks to all the amazing developers who have contributed to DeepSolv:
 
 <!-- Contributors will be automatically populated -->
-<a href="https://github.com/your-username/DeepSolv/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=your-username/DeepSolv" />
+<a href="https://github.com/VASVIjs124/DeepSolv/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=VASVIjs124/DeepSolv" />
 </a>
 
 ### 🏢 **Professional Recognition**
